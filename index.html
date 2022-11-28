@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8"/>
+	<title>Game</title>
+
+	<link rel="stylesheet" href="style.css" type="text/css"/>
+	<script src="https://code.jquery.com/jquery-3.6.1.min.js"></script>
+
+</head>
+
+<body>
+	<div id="sidebar_wrap">
+		<nav class="navbar " id="hero">
+			<button class="btn btn-info" onclick="myFunction()">Dark Mode</button>
+		</nav>
+	</div>
+	</br>
+
+	<audio>
+	</audio>
+
+	<!-- instruction phase ends here -->
+	<div class="container-custom">
+		Game
+		<table class="table">
+			<thead>
+			<tr style="color: crimson; width: 50%;">
+				<th scope="col"></th>
+				<th scope="col">User</th>
+				<th scope="col">Computer</th>
+			</tr>
+			</thead>
+			<tbody>
+			<tr>
+				<th scope="row">Win</th>
+				<td id="playerstat1"></td>
+				<td id="computerstat1"></td>
+			</tr>
+			<tr>
+				<th scope="row">Lost</th>
+				<td id="loss1"></td>
+				<td id="loss2"></td>
+			</tr>
+			<tr>
+				<th scope="row">Draw</th>
+				<td id="draw1"></td>
+				<td id="draw2"></td>
+			</tr>
+			</tbody>
+		</table>
+
+		<div class="play-area" id="play">
+			<div id="block_0" class="block"></div>
+			<div id="block_1" class="block"></div>
+			<div id="block_2" class="block"></div>
+			<div id="block_3" class="block"></div>
+			<div id="block_4" class="block"></div>
+			<div id="block_5" class="block"></div>
+			<div id="block_6" class="block"></div>
+			<div id="block_7" class="block"></div>
+			<div id="block_8" class="block"></div>
+		</div>
+
+		<select id="ai_level">
+			<option value="easy" selected>Easy</option>
+			<option value="normal">Normal</option>
+			<option value="hard">Hard</option>
+		</select>
+		<div class="div-end-of-game">
+			<button onclick="reset_board()">Start</button>
+		</div>
+		<!--显示获胜者-->
+		<h2 id="winner"></h2>
+	</div>
+
+	<script src="fbinstant.js"></script>
+	<script src="app.js"></script>
+</body>
+
+<script>
+	var x = document.getElementById("myAudio");
+	var sliderLevel = document.querySelector('#volume-slider')
+	x.volume = sliderLevel.value / 100
+	sliderLevel.addEventListener("change", function (e) {
+		x.volume = e.currentTarget.value / 100;
+	})
+
+	function playAudio(btn) {
+		if (x.paused) {
+			x.play();
+			document.querySelector(".btn-primary").innerHTML = "Pause Music";
+		} else {
+			x.pause();
+			document.querySelector(".btn-primary").innerHTML = "Play Music";
+		}
+	}
+
+	// 控制背景颜色
+	function myFunction() {
+		var main = document.body;
+		var hero = document.getElementsByClassName('navbar')[0]
+		var container = document.getElementById('play')
+		var darkToggle = document.getElementsByClassName('btn')
+		var heroText = document.getElementsByClassName('navbar-brand')
+		var arr = Array.prototype.slice.call(heroText)
+
+		arr.forEach(element => {
+			element.classList.toggle('dark-text')
+		});
+
+		if (darkToggle[0].textContent === "Dark Mode") {
+			darkToggle[0].textContent = "Light Mode"
+		} else {
+			darkToggle[0].textContent = "Dark Mode"
+		}
+
+		hero.classList.toggle("dark-hero");
+		main.classList.toggle("dark-main");
+		container.classList.toggle("dark-play")
+	}
+</script>
+
+</html>
