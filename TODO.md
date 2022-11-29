@@ -10,7 +10,7 @@
 
 ---
 
-_Bug-ToFix:
+Bug-ToFix:
 - [x] 如果Player开始，则会漏掉一步
   - 测试电脑先手
   - 场景复现：第一轮player赢，第二轮电脑先手

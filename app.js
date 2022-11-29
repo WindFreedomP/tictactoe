@@ -1,6 +1,6 @@
 // 表示当前轮数
 var round = 1;
-var tot_round = 2;
+var tot_round = 5;
 // play_board 表示游戏面板的单元格 当前是哪个角色占有
 let play_board = ["", "", "", "", "", "", "", "", ""];
 // 表示玩家和电脑分别对应的符号
@@ -117,7 +117,7 @@ const endOperation = () => {
 	if (playerWin > computerWin) {  // 玩家获胜
 		endMusic = new Audio("audio/youWin.mp4");
 		endMusic.play();
-		sleep(2000).then(() => {
+		sleep(3000).then(() => {
 			endMusic = new Audio("audio/congratulations.m4a");
 			endMusic.play();
 		});
@@ -129,15 +129,17 @@ const endOperation = () => {
 		endMusic.play();
 	}
 
-	// 标识游戏结束，播放pressstart语音
-	running = false;
 
 	// 播放谢谢参与语音
-	sleep(2000).then(() => {
+	sleep(6000).then(() => {
 		audio = new Audio("audio/thanksforplay.m4a");
 		audio.play();
 	});
 
+	sleep(8000).then(() => {
+		// 标识游戏结束，播放pressstart语音
+		running = false;
+	});
 }
 
 /**
