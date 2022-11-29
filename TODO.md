@@ -15,8 +15,10 @@ _Bug-ToFix:
   - 测试电脑先手
   - 场景复现：第一轮player赢，第二轮电脑先手
   - 因为上一局最后一手是player下的，因此addPlayerMove()还在堆栈中, 执行完gameloop()后返回还会执行addComputerMove(), 因此增加一个标志位来防止影响下一局 
+- [x] 最后一步之后增加延时，展示结果
+- [x] 调整声音
 
----_
+---
 
 报告:
 - [井字棋AI实现](https://blog.csdn.net/qq_36171287/article/details/104887248)

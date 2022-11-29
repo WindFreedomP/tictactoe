@@ -1,11 +1,13 @@
 // 表示当前轮数
 var round = 1;
-var tot_round = 5;
+var tot_round = 2;
 // play_board 表示游戏面板的单元格 当前是哪个角色占有
 let play_board = ["", "", "", "", "", "", "", "", ""];
 // 表示玩家和电脑分别对应的符号
 const player = "X";
 const computer ="O";
+// 表示已经开始一次匹配
+let running = false;
 /*
  记录游戏是否已经结束， 值为true时 棋盘不能再进行下一步
  */
@@ -41,42 +43,40 @@ const game_loop = () => {
 	 * 如果本轮结束 那么就判断此次匹配是否已经完成五轮，如果已经五轮，则执行最终的操作逻辑
 	 */
 	if (res != ""){
-		if (round == tot_round) {
-			endOperation();
-		} else { // 如果还没结束 reset重置棋盘
-			round ++;
-			updateRound();
-			reset_board();
-		}
-		fin = 1;
+		sleep(1000).then(() => {
+			if (round == tot_round) {
+				endOperation();
+			} else { // 如果还没结束 reset重置棋盘
+				round ++;
+				updateRound();
+				reset_board();
+			}
+			fin = 1;
+		});
 	}
 	return fin;
 }
-
+function sleep (time) {
+	return new Promise((resolve) => setTimeout(resolve, time));
+}
 
 /**
  * 一次匹配（五轮）结束后的处理逻辑
  * @param x
  */
 const endOperation = () => {
-	let winner_role = null;
-	// 判断winner role 0表示玩家赢，1表示电脑赢 2表示平局
-	if (playerWin > computerWin) winner_role = 0;
-	else if (playerWin < computerWin) winner_role = 1;
-	else winner_role = 2;
-
 	/*
 		更新页面元素
 	 */
 	// 如果电脑赢，则更新上方Game Over，将round元素的值改成Over就行
-	if (winner_role == 1) {
+	if (playerWin < computerWin) {
 		$("#round").text("Over");
 	}
 
 	// 在下方显示获胜者
-	if (winner_role == 0) {
+	if (playerWin > computerWin) {
 		$("#prompt").text("Player WIN!");
-	} else if (winner_role == 1) {
+	} else if (playerWin < computerWin) {
 		$("#prompt").text("Computer WIN!");
 	} else {
 		$("#prompt").text("DRAW!");
@@ -114,16 +114,30 @@ const endOperation = () => {
 
 	// 播放音乐
 	// audio.pause();
-	if (1) {  // 玩家获胜
-		endMusic = new Audio("audio/iWin.mp4");
-		endMusic.play();
-	} else if (2) { // 电脑获胜
+	if (playerWin > computerWin) {  // 玩家获胜
 		endMusic = new Audio("audio/youWin.mp4");
+		endMusic.play();
+		sleep(2000).then(() => {
+			endMusic = new Audio("audio/congratulations.m4a");
+			endMusic.play();
+		});
+	} else if (playerWin < computerWin) { // 电脑获胜
+		endMusic = new Audio("audio/iWin.mp4");
 		endMusic.play();
 	} else { // 平局
 		endMusic = new Audio("audio/draw.mp4");
 		endMusic.play();
 	}
+
+	// 标识游戏结束，播放pressstart语音
+	running = false;
+
+	// 播放谢谢参与语音
+	sleep(2000).then(() => {
+		audio = new Audio("audio/thanksforplay.m4a");
+		audio.play();
+	});
+
 }
 
 /**
@@ -192,7 +206,7 @@ const randomizeStart = () => {
 		// const PLAYER = 0;
 		const COMPUTER = 1;
 		const start = Math.round(Math.random());
-		if (1) { // start === COMPUTER
+		if (start === COMPUTER) { // start === COMPUTER
 			// 电脑先手
 			console.log("COMPUTER STARTED")
 			addComputerMove(ai_level);
@@ -431,6 +445,9 @@ const reset_board = () => {
  * 开始新的一次匹配（对应五轮）
  */
 const begin_new_game = () => {
+	// 标识游戏进行中，用于停止语音
+	running = true;
+
 	// 重置轮数
 	round = 1;
 	updateRound();
@@ -454,6 +471,17 @@ const begin_new_game = () => {
 // });
 
 /**
+ * 当游戏未进行时，每隔10s，电脑重复说：按start开始新游戏
+ */
+const audio_pressStart = () => {
+	if (!running) {
+		const audio = new Audio("audio/pressStart.MP4");
+		audio.play();
+	}
+}
+setInterval("audio_pressStart()", 10000);
+
+/**
  * 页面初始执行的函数
  */
 // 配置AI, 其中配置的ai_level 在下一步的begin_new_game() -> reset_board() -> randomizeStart() 中进行电脑先手时要用到
@@ -472,8 +500,9 @@ const display_topscore = () => {
 		}
 	);
 }
+
 display_topscore();
 
 // 初始渲染面板
-begin_new_game();
+// begin_new_game();
 
