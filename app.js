@@ -1,5 +1,6 @@
 // 表示当前轮数
 var round = 1;
+var tot_round = 5;
 // play_board 表示游戏面板的单元格 当前是哪个角色占有
 let play_board = ["", "", "", "", "", "", "", "", ""];
 // 表示玩家和电脑分别对应的符号
@@ -40,7 +41,7 @@ const game_loop = () => {
 	 * 如果本轮结束 那么就判断此次匹配是否已经完成五轮，如果已经五轮，则执行最终的操作逻辑
 	 */
 	if (res != ""){
-		if (round == 5) {
+		if (round == tot_round) {
 			endOperation();
 		} else { // 如果还没结束 reset重置棋盘
 			round ++;
@@ -50,6 +51,79 @@ const game_loop = () => {
 		fin = 1;
 	}
 	return fin;
+}
+
+
+/**
+ * 一次匹配（五轮）结束后的处理逻辑
+ * @param x
+ */
+const endOperation = () => {
+	let winner_role = null;
+	// 判断winner role 0表示玩家赢，1表示电脑赢 2表示平局
+	if (playerWin > computerWin) winner_role = 0;
+	else if (playerWin < computerWin) winner_role = 1;
+	else winner_role = 2;
+
+	/*
+		更新页面元素
+	 */
+	// 如果电脑赢，则更新上方Game Over，将round元素的值改成Over就行
+	if (winner_role == 1) {
+		$("#round").text("Over");
+	}
+
+	// 在下方显示获胜者
+	if (winner_role == 0) {
+		$("#prompt").text("Player WIN!");
+	} else if (winner_role == 1) {
+		$("#prompt").text("Computer WIN!");
+	} else {
+		$("#prompt").text("DRAW!");
+	}
+
+	/*
+	 	比较并保存TopScore
+	 */
+	let name;
+	// 首先获取原来的值
+	score = parseInt($("#score").text());
+	console.log('previous score: ' + score);
+	// 获取现在的值 即playerWin
+	if (playerWin > score) {
+		alert("You broke the highest record!!!");
+		name = prompt('input your name');
+		console.log("user who break the record: ", name);
+
+		// 保存数据到本地
+		var blob = new Blob([name + ' ' + playerWin], {type: 'text/plain'})
+
+		var url = window.URL.createObjectURL(blob)
+		// 上面这个是创建一个blob的对象连链接，
+		var link = document.createElement('a')
+		// 创建一个链接元素，是属于 a 标签的链接元素，所以括号里才是a，
+
+		link.href = url;
+		// 把上面获得的blob的对象链接赋值给新创建的这个 a 链接
+		link.setAttribute('download', "topscore.txt")
+		// 设置下载的属性（所以使用的是download），这个是a 标签的一个属性
+		// 后面的是文件名字，可以更改
+		link.click();
+		// 使用js点击这个链接
+	}
+
+	// 播放音乐
+	// audio.pause();
+	if (1) {  // 玩家获胜
+		endMusic = new Audio("audio/iWin.mp4");
+		endMusic.play();
+	} else if (2) { // 电脑获胜
+		endMusic = new Audio("audio/youWin.mp4");
+		endMusic.play();
+	} else { // 平局
+		endMusic = new Audio("audio/draw.mp4");
+		endMusic.play();
+	}
 }
 
 /**
@@ -279,50 +353,6 @@ const checkWinner = () => {
 	return res;
 };
 
-/**
- * 一次匹配（五轮）结束后的处理逻辑
- * @param x
- */
-const endOperation = () => {
-	let winner_role = null;
-	// 判断winner role 0表示玩家赢，1表示电脑赢 2表示平局
-	if (playerWin > computerWin) winner_role = 0;
-	else if (playerWin < computerWin) winner_role = 1;
-	else winner_role = 2;
-
-	/*
-		更新页面元素
-	 */
-	// 如果电脑赢，则更新上方Game Over，将round元素的值改成Over就行
-	if (winner_role == 1) {
-		$("#round").text("Over");
-	}
-
-	// 在下方显示获胜者
-	if (winner_role == 0) {
-		$("#prompt").text("Player WIN!");
-	} else if (winner_role == 1) {
-		$("#prompt").text("Computer WIN!");
-	} else {
-		$("#prompt").text("DRAW!");
-	}
-
-	// 比较并保存TopScore
-
-	// 播放音乐
-	// audio.pause();
-	if (1) {  // 玩家获胜
-		endMusic = new Audio("audio/iWin.mp4");
-		endMusic.play();
-	} else if (2) { // 电脑获胜
-		endMusic = new Audio("audio/youWin.mp4");
-		endMusic.play();
-	} else { // 平局
-		endMusic = new Audio("audio/draw.mp4");
-		endMusic.play();
-	}
-}
-
 var x = document.getElementById("myAudio");
 
 const muteAudio = () => { //mutes or demutes all the audio (music and end game music)
@@ -428,6 +458,21 @@ const begin_new_game = () => {
  */
 // 配置AI, 其中配置的ai_level 在下一步的begin_new_game() -> reset_board() -> randomizeStart() 中进行电脑先手时要用到
 configure_ai();
+
+// 实现从topscore文件中读取内容并显示
+const display_topscore = () => {
+	const reader = new FileReader();
+	$.get(
+		url = "./topscore.txt",
+		callback = (data) => {
+			tmp = data.split(' ');
+			$("#score").text(tmp[1]);
+			$("#name").text(tmp[0]);
+			// console.log('topscore: ', data);
+		}
+	);
+}
+display_topscore();
 
 // 初始渲染面板
 begin_new_game();
