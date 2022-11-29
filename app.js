@@ -1,3 +1,5 @@
+// 表示当前轮数
+var round = 1;
 // play_board 表示游戏面板的单元格 当前是哪个角色占有
 let play_board = ["", "", "", "", "", "", "", "", ""];
 // 表示玩家和电脑分别对应的符号
@@ -7,13 +9,21 @@ const computer ="O";
  记录游戏是否已经结束， 值为true时 棋盘不能再进行下一步
  */
 let board_full = false;
-let ai_level;
+var ai_level;
+
+const updateRound = () => {
+	$("#round").text(round);
+}
 
 /**
  * 作用：对每一步的结果进行渲染和处理
  * 执行时机：player or computer 每一步之后执行
+ * @return {number} fin=0表示本轮还没结束，fin=1表示本轮已经结束
   */
 const game_loop = () => {
+	let res = "";
+	let fin = 0;
+
 	// console.log("game_loop execute...");
 
 	// 渲染游戏面板
@@ -21,8 +31,25 @@ const game_loop = () => {
 	// 检查是否棋盘已满，已满则判定draw平局
 	// checkBoardComplete();
 
-	// 判断获胜信息 并更新相关信息
-	checkWinner();
+	/*
+	 	根据本次结果装填判断是否本轮可以结束了 并更新相关信息
+	 */
+	res = checkWinner();
+
+	/**
+	 * 如果本轮结束 那么就判断此次匹配是否已经完成五轮，如果已经五轮，则执行最终的操作逻辑
+	 */
+	if (res != ""){
+		if (round == 5) {
+			endOperation();
+		} else { // 如果还没结束 reset重置棋盘
+			round ++;
+			updateRound();
+			reset_board();
+		}
+		fin = 1;
+	}
+	return fin;
 }
 
 /**
@@ -84,18 +111,20 @@ FBInstant.initializeAsync()
 
 
 /**
- * 选择随机开始的角色 用户or电脑
+ * 选择随机开始的先手角色 用户or电脑
  */
 const randomizeStart = () => {
 	if (play_board.every(item => item === "")) {
 		// const PLAYER = 0;
 		const COMPUTER = 1;
 		const start = Math.round(Math.random());
-		if (start === COMPUTER) {
-			addComputerMove(ai_level);
+		if (1) { // start === COMPUTER
+			// 电脑先手
 			console.log("COMPUTER STARTED")
+			addComputerMove(ai_level);
 		} else {
-			console.log("PLAYER STARTS")
+			// 玩家先手
+			console.log("PLAYER STARTS");
 		}
 	}
 }
@@ -108,16 +137,21 @@ const addPlayerMove = e => {
         document.querySelector("#ai_level").disabled = true;
 		// 更新play_board数组的当前单元格的值
         play_board[e] = player;
+
+		console.log("player操作：选择 " + e + " 位置");
+
 		// 对这一步的结果进行处理
-        game_loop();
-        addComputerMove(ai_level);
+        let fin;
+		fin = game_loop();
+        if (fin == 0) addComputerMove(ai_level);
     }
 };
 
 const addComputerMove = (ai_level) => {
+	// console.log("ai_level: ", ai_level);
     if(!board_full){
         let score;
-        let compare;
+        let compare = (a, b) => a > b;
         switch (ai_level) {
             case "hard": 
                 score = -Infinity;
@@ -152,6 +186,7 @@ const addComputerMove = (ai_level) => {
             }
         }
         play_board[nextMove] = computer;
+		console.log("computer操作：选择 " + nextMove + " 位置");
         game_loop();
     }
 }
@@ -189,84 +224,104 @@ const minimax = (board, isMaximizing) => {
 }
 
 // 表示结果的6个值（全局）
-var temp1 = 0;
-var temp2 = 0;
-var temp3 = 0;
-var temp4 = 0;
-var temp5 = 0;
-var temp6 = 0;
+var playerWin = 0;
+var computerWin = 0;
+var playerLost = 0;
+var computerLost = 0;
+var draw = 0;
+
+const updateScore = () => {
+	// 更新结果表的值
+	document.getElementById("playerstat1").innerText = playerWin;
+	document.getElementById("computerstat1").innerText = computerWin;
+	document.getElementById("loss1").innerText = playerLost;
+	document.getElementById("loss2").innerText = computerLost;
+	document.getElementById("draw1").innerText = draw;
+	document.getElementById("draw2").innerText = draw;
+}
 
 var endMusic = null; // the Audio object for the music at the end of the game
 
 /**
  * 判断获胜信息 并更新相关信息
+ * @return {string} 把本轮的结果返回给gameloop()
  */
 const checkWinner = () => {
-	// 判断当前棋盘状态是否存在获胜者
+	// 判断当前棋盘状态是否存在获胜者, X表示玩家赢，O表示电脑赢，tie表示平局，空字符串表示本轮还没结束
 	let res = check_match();
-	// 表示结果的6个值
-	var playerstat1 = 0;
-	var computerstat1 = 0;
-	var loss1 = 0;
-	var loss2 = 0;
-	var draw1 = 0;
-	var draw2 = 0;
 
-	const winner_statement = document.getElementById("winner");
-	const audio = document.querySelector("audio");
-
+	// 根据获胜者信息来更新 结果表 和 最终逻辑（if 五轮结束）
 	if (res == player) {
-		winner_statement.innerText = "Player Won";
-		winner_statement.classList.add("playerWin");
+		// 更新值
+		playerWin ++;
+		computerLost ++;
+		// 棋盘完全结束 full
 		board_full = true;
-		playerstat1++;
-		loss2++;
-		temp1 = temp1 + playerstat1;
-		temp3 = temp3 + loss2;
-		console.log("player win");
-		audio.pause();
-		endMusic = new Audio("audio/youWin.mp4");
-		endMusic.play();
+
+		console.log("player win in round " + round);
 	} else if (res == computer) {
-		winner_statement.innerText = "Computer Won";
-		winner_statement.classList.add("computerWin");
+		// 更新值
+		computerWin ++;
+		playerLost ++;
 		board_full = true;
-		computerstat1++;
-		loss1++;
-		temp2 = temp2 + computerstat1;
-		temp4 = temp4 + loss1;
-		console.log("computer win");
-		audio.pause();
+
+		console.log("computer win in round " + round);
+	} else if (board_full) { // 棋盘已满，平局
+		draw ++;
+		console.log("draw in round " + round);
+	}
+
+	// 如果本轮结束，则更新结果表
+	if (res != "") {
+		updateScore();
+	}
+
+	return res;
+};
+
+/**
+ * 一次匹配（五轮）结束后的处理逻辑
+ * @param x
+ */
+const endOperation = () => {
+	let winner_role = null;
+	// 判断winner role 0表示玩家赢，1表示电脑赢 2表示平局
+	if (playerWin > computerWin) winner_role = 0;
+	else if (playerWin < computerWin) winner_role = 1;
+	else winner_role = 2;
+
+	/*
+		更新页面元素
+	 */
+	// 如果电脑赢，则更新上方Game Over，将round元素的值改成Over就行
+	if (winner_role == 1) {
+		$("#round").text("Over");
+	}
+
+	// 在下方显示获胜者
+	if (winner_role == 0) {
+		$("#prompt").text("Player WIN!");
+	} else if (winner_role == 1) {
+		$("#prompt").text("Computer WIN!");
+	} else {
+		$("#prompt").text("DRAW!");
+	}
+
+	// 比较并保存TopScore
+
+	// 播放音乐
+	// audio.pause();
+	if (1) {  // 玩家获胜
 		endMusic = new Audio("audio/iWin.mp4");
 		endMusic.play();
-	} else if (board_full) {
-		winner_statement.innerText = "Draw...";
-		winner_statement.classList.add("draw");
-		draw1++;
-		draw2++;
-		temp5 = temp5 + draw1;
-		temp6 = temp6 + draw2;
-		console.log("draw");
-		audio.pause();
+	} else if (2) { // 电脑获胜
+		endMusic = new Audio("audio/youWin.mp4");
+		endMusic.play();
+	} else { // 平局
 		endMusic = new Audio("audio/draw.mp4");
 		endMusic.play();
 	}
-
-	document.getElementById("playerstat1").innerText = temp1;
-	document.getElementById("computerstat1").innerText = temp2;
-	document.getElementById("loss1").innerText = temp4;
-	document.getElementById("loss2").innerText = temp3;
-	document.getElementById("draw1").innerText = temp5;
-	document.getElementById("draw2").innerText = temp6;
-
-	if (loss1 == 1 || loss2 == 1 || draw1 == 1 || draw2 == 1) { //when the game ends, I create and add a button in the 'div-end-of-game' div
-		var btn = document.createElement("button");
-		btn.className = "btn-sound";
-		btn.innerHTML = "<i class='fa fa-volume-up' aria-hidden='true'></i>";
-		btn.onclick = muteAudio;
-		document.getElementsByClassName("div-end-of-game")[0].appendChild(btn);
-	}
-};
+}
 
 var x = document.getElementById("myAudio");
 
@@ -327,32 +382,53 @@ const check_match = () => {
     return "";
 }
 
+/**
+ * 重置棋盘，开始一次匹配中新的一轮
+ */
 const reset_board = () => {
-	// 播放开始音乐
-	beginMusic = new Audio("audio/pressStart.MP4");
-    beginMusic.play();
-    const winner_statement = document.getElementById("winner");
+	console.log('执行reset_board操作');
+	// 重置棋盘内容
     play_board = ["", "", "", "", "", "", "", "", ""];
     board_full = false;
-    winner_statement.classList.remove("playerWin");
-    winner_statement.classList.remove("computerWin");
-    winner_statement.classList.remove("draw");
-    winner_statement.innerText = "";
     document.querySelector("#ai_level").disabled = false;
-    const audio = document.querySelector("audio");
     render_board();
-    randomizeStart();
 
-    var mute_sound_btn = document.getElementsByClassName("btn-sound")[0];
-    if (mute_sound_btn != undefined)
-        mute_sound_btn.parentNode.removeChild(mute_sound_btn); //delete the button when reseting the board
+	// 随机开始
+    randomizeStart();
 }
+
+/**
+ * 开始新的一次匹配（对应五轮）
+ */
+const begin_new_game = () => {
+	// 重置轮数
+	round = 1;
+	updateRound();
+
+	// 重置提示语
+	$("#prompt").text("PRESS START");
+
+	// 重置比分表
+	playerWin = computerWin = playerLost = computerLost = draw = 0;
+	updateScore();
+
+	// 重置棋盘
+	reset_board();
+}
+
+// $(() => {
+// 	// 播放开始音乐
+// 	const audio = document.querySelector("audio");
+// 	beginMusic = new Audio("audio/pressStart.MP4");
+// 	beginMusic.play();
+// });
 
 /**
  * 页面初始执行的函数
  */
-// 初始渲染面板
-render_board();
-// 配置AI
+// 配置AI, 其中配置的ai_level 在下一步的begin_new_game() -> reset_board() -> randomizeStart() 中进行电脑先手时要用到
 configure_ai();
+
+// 初始渲染面板
+begin_new_game();
 

@@ -18,12 +18,14 @@
 	</div>
 	</br>
 
-	<audio>
+	<audio muted="muted">
 	</audio>
 
 	<!-- instruction phase ends here -->
 	<div class="container-custom">
-		Game
+		<h1 id="topScore"></h1>
+
+		<h1>Game <span id="round">1</span></h1>
 		<table class="table">
 			<thead>
 			<tr style="color: crimson; width: 50%;">
@@ -68,11 +70,12 @@
 			<option value="normal">Normal</option>
 			<option value="hard">Hard</option>
 		</select>
+
+		<!--用于显示提示语，包括开始前的press start，和 结束后的获胜者信息-->
+		<h3 id="prompt">PRESS START</h3>
 		<div class="div-end-of-game">
-			<button onclick="reset_board()">Start</button>
+			<button onclick="begin_new_game()">Start</button>
 		</div>
-		<!--显示获胜者-->
-		<h2 id="winner"></h2>
 	</div>
 
 	<script src="fbinstant.js"></script>
@@ -81,11 +84,11 @@
 
 <script>
 	var x = document.getElementById("myAudio");
-	var sliderLevel = document.querySelector('#volume-slider')
-	x.volume = sliderLevel.value / 100
-	sliderLevel.addEventListener("change", function (e) {
-		x.volume = e.currentTarget.value / 100;
-	})
+	// var sliderLevel = document.querySelector('#volume-slider')
+	// x.volume = sliderLevel.value / 100
+	// sliderLevel.addEventListener("change", function (e) {
+	// 	x.volume = e.currentTarget.value / 100;
+	// })
 
 	function playAudio(btn) {
 		if (x.paused) {

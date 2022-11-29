@@ -1,10 +1,18 @@
 功能 TODO:
-- [ ] 实现一次匹配为5轮
+- [x] 实现一次匹配为5轮
 * 显示
-  - [ ] 上方显示Game的轮数
-  - [ ] 下方显示 谁赢 I win or Computer win
+  - [x] 上方显示Game的轮数
+  - [x] 下方显示 谁赢 I win or Computer win
 - [x] win line: 实现为三个单元块设定为绿色
 - [ ] Top Score: 通过一个名为TopScore的文件记录最高分
+
+---
+
+Bug-ToFix:
+- [x] 如果Player开始，则会漏掉一步
+  - 测试电脑先手
+  - 场景复现：第一轮player赢，第二轮电脑先手
+  - 因为上一局最后一手是player下的，因此addPlayerMove()还在堆栈中, 执行完gameloop()后返回还会执行addComputerMove(), 因此增加一个标志位来防止影响下一局 
 
 ---
 
